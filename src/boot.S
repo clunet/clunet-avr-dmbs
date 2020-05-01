@@ -701,7 +701,7 @@ CLUNET_ASM_START(btldr_recv)
     brtc    1f                                                  ; [1][2] -> client not set in non-bootloader mode.
     
     cpse    tmphi, client                                       ; [2][1]
-    rjmp    5f                                                  ; [0][2] -> ERROR: message not from client.
+    rjmp    btldr_recv                                          ; [0][2] -> ERROR: message not from client. try again.
     
     ; check for system request message
 1:  ldd     ret0lo, Y+3                                         ; [2]
