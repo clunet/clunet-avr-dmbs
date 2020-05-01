@@ -24,7 +24,7 @@
    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-   POSSIBILITY OF SUCH DAMAGE.	*/
+   POSSIBILITY OF SUCH DAMAGE. */
 
 #ifndef _CLUNET_H_
 #define _CLUNET_H_
@@ -167,35 +167,27 @@ typedef uint8_t clunet_command_t;
 typedef uint8_t clunet_result_t;
 
 typedef struct {
-
-	uint8_t             tx_size;
-	uint8_t             rx_size;
-	char                name[];
-
+    uint8_t tx_size;
+    uint8_t rx_size;
+    char    name[];
 } clunet_device_description_t;
 
 typedef struct {
-
-	uint8_t             size;
-	uint8_t             data[];
-
+    uint8_t size;
+    uint8_t data[];
 } clunet_payload_t;
 
 typedef struct {
-
-	clunet_priority_t   priority;
-	clunet_address_t    dst_address;
-	clunet_address_t    src_address;
-	clunet_command_t    command;
-  clunet_payload_t    payload;
-
+    clunet_priority_t priority;
+    clunet_address_t  dst_address;
+    clunet_address_t  src_address;
+    clunet_command_t  command;
+    clunet_payload_t  payload;
 } clunet_message_t;
 
 typedef struct {
-
-  uint8_t             size;
-	clunet_message_t    message;
-
+    uint8_t           size;
+    clunet_message_t  message;
 } clunet_template_t;
 
 #define CLUNET_HEADER_SIZE  sizeof(clunet_message_t)
