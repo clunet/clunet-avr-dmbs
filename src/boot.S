@@ -229,8 +229,6 @@ CLUNET_ASM_START(btldr_main)
 #if CLUNET_CONFIG_BOOTLOADER_WDT_DISABLE
     wdt_disable             ; [4|7]
 #endif
-    ;sfr_ldi CLKPR, _BV(CLKPCE)
-    ;sfr_ldi CLKPR, _BV(CLKPS1)
     gpio_init               ; [0|4]
     stack_init              ; [2|4]
     tim_start               ; [2]
@@ -245,7 +243,8 @@ btldr_restart:
     ldi     retries_reg, CLUNET_CONFIG_BOOTLOADER_READ_RETRIES  ; [1]
     ldi     arg0lo, CLUNET_SYSTEM_REBOOT                        ; [1]
     rcall   btldr_send                                          ; [x]
-0:  rcall   btldr_recv                                          ; [x] <-
+0:  clt                                                         ; [1]
+    rcall   btldr_recv                                          ; [x] <-
     brtc    1f                                                  ; [1][2] ->
     cpi     ret0lo, CLUNET_BTLDR_ENTER                          ; [1]
     brne    1f                                                  ; [1][2] ->
@@ -262,8 +261,7 @@ btldr_send_error:
     std     Y+4, __zero_reg__                   ; [2]
 btldr_send_response:
     rcall   btldr_send                          ; [3]
-0:  rcall   btldr_recv                          ; [3]
-    brtc    0b                                  ; [1][2] -> ERROR: wrong packet.
+    rcall   btldr_recv                          ; [3]
 
     cpi     ret0lo, CLUNET_BTLDR_EXIT           ; [1]
     brlo    btldr_send_error                    ; [1][2] -> ERROR: command not supported.
@@ -567,7 +565,7 @@ CLUNET_ASM_START(btldr_safe_spm)
 CLUNET_ASM_END(btldr_safe_spm)
 
 ; btldr_send: send message until success
-; RETURN: none
+; RETURN: TF = 1
 
 CLUNET_ASM_START(btldr_send)
 
@@ -636,43 +634,41 @@ CLUNET_ASM_START(btldr_send)
     
 CLUNET_ASM_END(btldr_send)
 
-; btldr_recv: received only system requests
-; RETURN: [T flag] - result of operation (TRUE if success)
+; btldr_recv: received only system requests (TF is bootloader mode flag)
+; RETURN: [TF]     - result of operation (TRUE if success)
 ;         [ret0lo] - command number (without type bits)
 
 CLUNET_ASM_START(btldr_recv)
-    
-    clt                                                         ; [1]
-7:  rcall   btldr_wait_interframe                               ; [x]
-    
-    ; waiting for dominant signal
 
+    rcall   btldr_wait_interframe                               ; [x]
+    
+    ; prepare for message receive
+9:  ldi     bit_counter, 2                                      ; [1]
+    clr     byte_index                                          ; [1]
+    movw    ZL, YL                                              ; [2]
+
+    ; waiting for dominant signal (infinite in bootloader mode)
 .if _timer_overflows > 256
-9:  xldi    _timer_overflows                                    ; [2]
-.else
-9:  ldi     XL, lo8(_timer_overflows)                           ; [1]
-.endif
+    xldi    _timer_overflows                                    ; [2]
 0:  sfr_ldi CLUNET_TIM_FLAGS_REG, _BV(CLUNET_TIM_FLAGS_OVF_BIT) ; [1] <- clear overflow and decrement counter
-.if _timer_overflows > 256
     sbiw    XL, 1                                               ; [2]
 .else
+    ldi     XL, lo8(_timer_overflows)                           ; [1]
+0:  sfr_ldi CLUNET_TIM_FLAGS_REG, _BV(CLUNET_TIM_FLAGS_OVF_BIT) ; [1] <- clear overflow and decrement counter
     dec     XL                                                  ; [1]
 .endif
-    breq    7f                                                  ; [1][2] -> ERROR: too long time no any message
-1:  sfr_sbic CLUNET_TIM_FLAGS_REG, CLUNET_TIM_FLAGS_OVF_BIT     ; [3][2] <- bus free
-    rjmp    0b                                                  ; [0][2] -> clear overflow and decrement counter
+    breq    6f                                                  ; [1][2] -> ERROR: too long time no any message
+1:  sfr_sbic CLUNET_TIM_FLAGS_REG, CLUNET_TIM_FLAGS_OVF_BIT     ; [3][2][2] <- bus free
+    brtc    0b                                                  ; [0][1][2] -> clear overflow and decrement counter (in non-bootloader mode)
     skip_bus_read_busy                                          ; [2][1]
     rjmp    1b                                                  ; [0][2] -> bus free
     
-    ldi     bit_counter, 2                                      ; [1]
-    clr     byte_index                                          ; [1]
-    movw    ZL, YL                                              ; [2]
-    
+    ; MAIN RECEIVE LOOP
     ; reading bit
 8:  tim_st  __zero_reg__                                        ; [1|2]
 0:  tim_ld  tmphi                                               ; [1|2]
     cpi     tmphi, CLUNET_T(CLUNET_CONFIG_INTERFRAME_PERIODS)   ; [1]
-    brsh    7b                                                  ; [1][2] -> ERROR: too long dominant signal. try again.
+    brsh    btldr_recv                                          ; [1][2] -> ERROR: too long dominant signal. try again.
     skip_bus_read_free                                          ; [2][1]
     rjmp    0b                                                  ; [0][2] ->
     
@@ -693,32 +689,31 @@ CLUNET_ASM_START(btldr_recv)
     ; checking for dst address
     ldd     tmphi, Y+1                                          ; [2] dst
     cpi     tmphi, CLUNET_CONFIG_DEVICE_ADDRESS                 ; [1]
-    brne    7f                                                  ; [1][2] -> ERROR: wrong dst address.
+    brne    5f                                                  ; [1][2] -> ERROR: wrong dst address.
     
     ; checking for src address
     ldd     tmphi, Y+2                                          ; [2] src
     cpi     tmphi, CLUNET_CONFIG_DEVICE_ADDRESS                 ; [1]
-    breq    7f                                                  ; [1][2] -> ERROR: src address is our.
+    breq    5f                                                  ; [1][2] -> ERROR: src address is our.
     cpi     tmphi, CLUNET_ADDRESS_BROADCAST                     ; [1]
-    breq    7f                                                  ; [1][2] -> ERROR: src is broadcast.
+    breq    5f                                                  ; [1][2] -> ERROR: src is broadcast.
     
-    cpi     client, CLUNET_ADDRESS_BROADCAST                    ; [1]
-    breq    0f                                                  ; [1][2] -> client not set yet
+    brtc    1f                                                  ; [1][2] -> client not set in non-bootloader mode.
     
     cpse    tmphi, client                                       ; [2][1]
-7:  ret                                                         ; [0][4] -> ERROR: message not from client.
+    rjmp    5f                                                  ; [0][2] -> ERROR: message not from client.
     
     ; check for system request message
-0:  ldd     ret0lo, Y+3                                         ; [2]
+1:  ldd     ret0lo, Y+3                                         ; [2]
     sbrc    ret0lo, CLUNET_MESSAGE_SYSTEM_BIT                   ; [1][1][2]
     sbrc    ret0lo, CLUNET_MESSAGE_RESPONSE_BIT                 ; [2][1][0]
-    ret                                                         ; [0][4][4] -> ERROR: non-system or response (event) message.
+    rjmp    5f                                                  ; [0][4][4] -> ERROR: non-system or response (event) message.
     
     ; checking for end of data message
 2:  ldd     tmphi, Y+4                                          ; [2] size
     subi    tmphi, -5                                           ; [1]
     cp      byte_index, tmphi                                   ; [1]
-    breq    5f                                                  ; [1][2] -> OK: data message received
+    breq    7f                                                  ; [1][2] -> OK: data message received
     
 3:  inc     byte_index                                          ; [1]
     ldi     bit_counter, 8                                      ; [1]
@@ -730,14 +725,19 @@ CLUNET_ASM_START(btldr_recv)
     skip_bus_read_busy                                          ; [2][1]
     rjmp    4b                                                  ; [0][2] ->
     rjmp    8b                                                  ; [2] -> next byte
-    
-5:  rcall   btldr_checksum                                      ; [3]
+
+    ; error
+5:  brts    btldr_recv                                          ; [1][2] -> ERROR: try again in bootloader mode.
+6:  ret                                                         ; [4]
+
+    ; message received
+7:  rcall   btldr_checksum                                      ; [3]
     cpse    byte_value, crc                                     ; [2][1]
-    ret                                                         ; [0][4] -> ERROR: CRC wrong
+    rjmp    5b                                                  ; [0][2] -> ERROR: CRC wrong
     cbr     ret0lo, CLUNET_MESSAGE_TYPE_MASK                    ; [1]
-    set                                                         ; [1]
+    set                                                         ; [1] set success flag TF (helpful in non-bootloader mode)
     ret                                                         ; [4]
-    
+
 CLUNET_ASM_END(btldr_recv)
 
 ; btldr_wait_interframe: infinite wait for interframe space
