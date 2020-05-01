@@ -182,12 +182,12 @@ CLUNET_ASM_START(clunet_task)
     rjmp    3f                                      ; [0][2][=9] -> skip checksum validating of RX message
 
     ; checksum validate
-    zldi    CLUNET_VAR(var_rx_dst)                  ; [2]
+    xldi    CLUNET_VAR(var_rx_dst)                  ; [2]
     rcall   message_checksum                        ; [53*size + 15]
-    ld      byte_value, Z                           ; [2]
+    ld      byte_value, X                           ; [2]
     sub     byte_value, crc                         ; [1]
     brne    6f                                      ; [1][2] -> BAD: CHECKSUM IS WRONG
-    st      Z, byte_value                           ; [2] reset checksum field
+    st      X, byte_value                           ; [2] reset checksum field
     
     ; set checksum flag
     cli                                             ; [1]
@@ -276,9 +276,9 @@ CLUNET_ASM_START(clunet_tx_start)
 
     ldi     tmp, CLUNET_CONFIG_DEVICE_ADDRESS       ; [1]
     sts     CLUNET_VAR(var_tx_src), tmp             ; [2]
-    zldi    CLUNET_VAR(var_tx_dst)                  ; [2]
+    xldi    CLUNET_VAR(var_tx_dst)                  ; [2]
     rcall   message_checksum                        ; [3]
-    st      Z, crc                                  ; [2]
+    st      X, crc                                  ; [2]
 
 CLUNET_ASM_START(clunet_tx_restart)
 
@@ -300,26 +300,40 @@ CLUNET_ASM_END(clunet_tx_start)
 CLUNET_ASM_END(clunet_task)
 
 ; message_checksum - local function for calculate CRC-8 MAXIM
-; IN:  Z - address of data, byte_counter - size of data
+; IN:  X - address of data, byte_counter - size of data
 ; OUT: crc = CRC-8,
-; Z - points to next byte after data,
+; X - points to next byte after data,
 ; byte_counter, bit_counter = 0, tmp = 0x8C
 ; 53 * size + 11(12) clocks
 
 CLUNET_ASM_START(message_checksum)
 
+    movw  ZL, XL                        ; [2]
     ldd   byte_counter, Z+3             ; [2] size
     subi  byte_counter, -4              ; [1]
-    ldi   tmp, 0x8C                     ; [1]
     clr   crc                           ; [1]
-0:  ld    byte_value, Z+                ; [2] <- next byte
-    eor   crc, byte_value               ; [1]
+#if CLUNET_BOOTLOADER_SUPPORT && CLUNET_CONFIG_BOOTLOADER_USE_CRC_TABLE
+    zhldi_P FLASHEND                    ; [2]
+#else
+    ldi   tmp, 0b10001100               ; [1]
+#endif
+0:  ld    ZL, X+                        ; [2] <- next byte
+#if CLUNET_BOOTLOADER_SUPPORT && CLUNET_CONFIG_BOOTLOADER_USE_CRC_TABLE
+    eor   ZL, crc                       ; [1]
+ #if CLUNET_RAMPZ
+    elpm  crc, Z                        ; [3]
+ #else
+    lpm   crc, Z                        ; [3]
+ #endif
+#else
+    eor   crc, ZL                       ; [1]
     ldi   bit_counter, 8                ; [1]
 1:  lsr   crc                           ; [1] <- next bit
     brcc  2f                            ; [1][2]
     eor   crc, tmp                      ; [1][0]
 2:  dec   bit_counter                   ; [1]
     brne  1b                            ; [1][2] -> next bit
+#endif
     dec   byte_counter                  ; [1]
     brne  0b                            ; [1][2] -> next byte
     ret                                 ; [4]
