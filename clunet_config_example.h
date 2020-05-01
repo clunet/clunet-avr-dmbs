@@ -1,7 +1,7 @@
 
 // This is example of clunet_config.h file. Rename it, edit and use in your project.
 
-/* Copyright (c) 2018  Sergey V. DUDANOV
+/* Copyright (c) 2018-2020  Sergey V. DUDANOV
    All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
@@ -146,6 +146,10 @@
 // EN: Checking for correct reset vector before jump (1 - ON, 0 - OFF)
 // RU: Проверка корректности вектора сброса перед переходом (1 - ВКЛ, 0 - ВЫКЛ)
 #define CLUNET_CONFIG_BOOTLOADER_CHECK_RESET_VECTOR     1
+
+// EN: Use CRC table for fast CRC calculation (1 - ON, 0 - OFF)
+// RU: Использовать таблицу для быстрого вычисления контрольной суммы (1 - ВКЛ, 0 - ВЫКЛ)
+#define CLUNET_CONFIG_BOOTLOADER_USE_CRC_TABLE          1
 
 /***************************************
  *  EN: CLUNET LOW LEVEL CONFIGURATION *

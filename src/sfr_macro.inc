@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019 Sergey V. DUDANOV
+/* Copyright (c) 2018-2020 Sergey V. DUDANOV
    All rights reserved.
 
    This file is part of clunet-avr-dmbs project.
@@ -187,6 +187,14 @@
 ; Load RAMPZ:ZH:ZL registers
 .macro zldi_P pm:req tmp=DEFAULT_TMP_REGISTER
     ldi     ZL, lo8(\pm)                ; [1]
+    ldi     ZH, hi8(\pm)                ; [1]
+#if defined(__AVR_HAVE_RAMPZ__) && FLASHEND > 0xFFFF
+    sfr_ldi RAMPZ, hlo8(\pm), \tmp      ; [2]
+#endif
+.endm
+
+; Load RAMPZ:ZH registers
+.macro zhldi_P pm:req tmp=DEFAULT_TMP_REGISTER
     ldi     ZH, hi8(\pm)                ; [1]
 #if defined(__AVR_HAVE_RAMPZ__) && FLASHEND > 0xFFFF
     sfr_ldi RAMPZ, hlo8(\pm), \tmp      ; [2]
