@@ -62,8 +62,8 @@
 #define CLUNET_INPORT(name)         CLUNET_CONCAT2(PIN, name)
 #define CLUNET_DDRPORT(name)        CLUNET_CONCAT2(DDR, name)
 
-#if !defined(CLUNET_CONFIG_DEVICE_ADDRESS) || (CLUNET_CONFIG_DEVICE_ADDRESS <= 0) || (CLUNET_CONFIG_DEVICE_ADDRESS > 255)
-# error "CLUNET_CONFIG_DEVICE_ADDRESS must be defined (1-255) and unique in your network."
+#if !defined(CLUNET_DEVICE_ADDRESS) || (CLUNET_DEVICE_ADDRESS < 0) || (CLUNET_DEVICE_ADDRESS > 254)
+# error "CLUNET_DEVICE_ADDRESS must be [0:254] and unique in your network."
 #endif
 #if CLUNET_CONFIG_TX_PAYLOAD_SIZE > 250
 # error "CLUNET_CONFIG_TX_PAYLOAD_SIZE couldn't be more than 250 bytes."

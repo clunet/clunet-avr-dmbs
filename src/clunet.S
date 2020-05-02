@@ -122,7 +122,7 @@ CLUNET_ASM_START(pm_ddesc)
     .byte   ddesc_msize
 0:  .byte   CLUNET_PRIORITY_INFO
     .byte   CLUNET_ADDRESS_BROADCAST
-    .byte   CLUNET_CONFIG_DEVICE_ADDRESS
+    .byte   CLUNET_DEVICE_ADDRESS
     .byte   CLUNET_SYSTEM_EVENT(CLUNET_SYSTEM_INFO)
 CLUNET_ASM_START(pm_ddesc_payload)
     .byte   ddesc_psize
@@ -274,7 +274,7 @@ user_cb:
 CLUNET_ASM_EXPORT(clunet_tx_start)
 CLUNET_ASM_START(clunet_tx_start)
 
-    ldi     tmp, CLUNET_CONFIG_DEVICE_ADDRESS       ; [1]
+    ldi     tmp, CLUNET_DEVICE_ADDRESS              ; [1]
     sts     CLUNET_VAR(var_tx_src), tmp             ; [2]
     xldi    CLUNET_VAR(var_tx_dst)                  ; [2]
     rcall   message_checksum                        ; [3]

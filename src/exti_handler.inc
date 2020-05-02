@@ -135,7 +135,7 @@ CLUNET_ASM_START(CLUNET_EXTI_INT_VECTOR)
     lds     tmp, CLUNET_VAR(var_rx_dst)                         ; [2]
     cpi     tmp, CLUNET_ADDRESS_BROADCAST                       ; [1]
     breq    0f                                                  ; [1][2] -> OK: BROADCAST message for us
-    cpi     tmp, CLUNET_CONFIG_DEVICE_ADDRESS                   ; [1]
+    cpi     tmp, CLUNET_DEVICE_ADDRESS                          ; [1]
 #if CLUNET_CONFIG_API_SNIFFER_CALLBACK
     brne    1f                                                  ; [1][2] -> OK in SNIFFER MODE
 0:  sbr     status, _BV(UCF)                                    ; [1] use UniCast Flag in SNIFFER MODE

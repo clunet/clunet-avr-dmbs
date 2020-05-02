@@ -41,10 +41,6 @@
 // RU: Короткое имя устройства для сетевого обнаружения.
 #define CLUNET_CONFIG_DEVICE_NAME               "Light #1"
 
-// EN: Network address (unique in network, between 1-255).
-// RU: Сетевой адрес (уникальный в сети, от 1 до 255).
-#define CLUNET_CONFIG_DEVICE_ADDRESS            10
-
 // EN: Maximum TX payload data size in bytes (250 max). Transfer attempt of more data will be truncated them.
 // RU: Максимальный размер передаваемых полезных данных в байтах (250 макс). Попытка передачи данных большего размера приведет к их обрезанию.
 #define CLUNET_CONFIG_TX_PAYLOAD_SIZE           250

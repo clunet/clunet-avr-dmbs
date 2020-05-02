@@ -572,7 +572,7 @@ CLUNET_ASM_START(btldr_send)
     ; PREPARE MESSAGE (HEADER, CHECKSUM, SIZE)
     
     std     Y+1, client                                         ; [2] set 'dst' to current client
-    ldi     tmphi, CLUNET_CONFIG_DEVICE_ADDRESS                 ; [1]
+    ldi     tmphi, CLUNET_DEVICE_ADDRESS                        ; [1]
     std     Y+2, tmphi                                          ; [2] set 'src' to device address
     sbr     arg0lo, CLUNET_MESSAGE_TYPE_MASK                    ; [1] set 'cmd' attributes 'system response'
     std     Y+0, arg0lo                                         ; [2] set 'prio' to max (2 high bits is set by previous instruction)
@@ -688,12 +688,12 @@ CLUNET_ASM_START(btldr_recv)
     
     ; checking for dst address
     ldd     tmphi, Y+1                                          ; [2] dst
-    cpi     tmphi, CLUNET_CONFIG_DEVICE_ADDRESS                 ; [1]
+    cpi     tmphi, CLUNET_DEVICE_ADDRESS                        ; [1]
     brne    5f                                                  ; [1][2] -> ERROR: wrong dst address.
     
     ; checking for src address
     ldd     tmphi, Y+2                                          ; [2] src
-    cpi     tmphi, CLUNET_CONFIG_DEVICE_ADDRESS                 ; [1]
+    cpi     tmphi, CLUNET_DEVICE_ADDRESS                        ; [1]
     breq    5f                                                  ; [1][2] -> ERROR: src address is our.
     cpi     tmphi, CLUNET_ADDRESS_BROADCAST                     ; [1]
     breq    5f                                                  ; [1][2] -> ERROR: src is broadcast.
