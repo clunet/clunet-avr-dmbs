@@ -1,4 +1,4 @@
-/* Copyright (c) 2018  Sergey V. DUDANOV
+/* Copyright (c) 2018-2020 Sergey V. DUDANOV
    All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
@@ -173,21 +173,18 @@ typedef struct {
 } clunet_device_description_t;
 
 typedef struct {
-    uint8_t size;
-    uint8_t data[];
-} clunet_payload_t;
-
-typedef struct {
-    clunet_priority_t priority;
-    clunet_address_t  dst_address;
-    clunet_address_t  src_address;
-    clunet_command_t  command;
-    clunet_payload_t  payload;
+    clunet_priority_t priority;     /* message priority */
+    clunet_address_t  dst_address;  /* destination address */
+    clunet_address_t  src_address;  /* source address */
+    clunet_command_t  command;      /* command */
+    uint8_t           size;         /* size of payload data */
+    /* payload data */
 } clunet_message_t;
 
 typedef struct {
-    uint8_t           size;
-    clunet_message_t  message;
+    uint8_t           size;         /* whole message size */
+    clunet_message_t  message;      /* message */
+    /* payload data */
 } clunet_template_t;
 
 #define CLUNET_HEADER_SIZE  sizeof(clunet_message_t)
@@ -218,13 +215,21 @@ clunet_message_t *clunet_tx_get_message(void);
 // RU: Подготовка простого ответа. После только необходимо добавить данные если это необходимо и можно отправлять.
 void clunet_tx_prepare_simple_response(void);
 
+// EN: Copy message in RAM to TX buffer.
+// RU: Копирует сообщение в буфер отправки.
+void clunet_tx_set_message(clunet_message_t *message);
+
 // EN: Copy payload to TX buffer.
 // RU: Копирует данные в буфер отправки.
 void clunet_tx_set_payload(void *payload, uint8_t payload_size);
 
-// EN: Copy payload to TX buffer from PROGMEM data. First byte must contain size.
+// EN: Copy payload to TX buffer from PROGMEM data.
+// RU: Копирует данные в буфер отправки из PROGMEM области.
+void clunet_tx_set_payload_P(const void *payload, uint8_t payload_size);
+
+// EN: Copy payload data to TX buffer from PROGMEM. First byte must contain size.
 // RU: Копирует данные в буфер отправки из шаблона в PROGMEM области. Первый байт должен содержать размер.
-void clunet_tx_set_payload_template_P(const clunet_payload_t *payload);
+void clunet_tx_set_payload_template_P(const void *payload);
 
 // EN: Copy message to TX buffer from PROGMEM template. First byte must contain size of whole message.
 // RU: Копирует сообщение в буфер отправки из шаблона в PROGMEM области. Первый байт должен содержать размер всего сообщения.
@@ -237,8 +242,6 @@ void clunet_tx_start(void);
 // EN: Transmit broadcast discovery struct.
 // RU: Отправляет широковещательное сообщение об устройстве.
 void clunet_tx_send_discovery(void);
-
-void clunet_tx_send_message(clunet_message_t *message);
 
 // EN: Receive callback function prototype. Must be implemented in user code.
 // RU: Прототип функции обратного вызова.  Может быть включен в файле clunet_config.h и должен быть реализован в пользовательском коде.
