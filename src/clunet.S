@@ -469,6 +469,8 @@ CLUNET_ASM_START(clunet_tx_set_payload)
     movw    ZL, arg0lo                  ; [2]
     xldi    CLUNET_VAR(var_tx_size)     ; [2]
     st      X+, arg1lo                  ; [2] size
+    tst     arg1lo                      ; [1]
+    breq    1f                          ; [1][2] ->
     rjmp    0f                          ; [2] ->
 
 CLUNET_ASM_EXPORT(clunet_tx_set_message)
@@ -482,11 +484,10 @@ CLUNET_ASM_START(clunet_tx_set_message)
     st      X+, tmp                     ; [2]
     dec     arg1lo                      ; [1]
     brne    0b                          ; [1][2] ->
-    ret                                 ; [4]
+1:  ret                                 ; [4]
 
 CLUNET_ASM_END(clunet_tx_set_message)
 CLUNET_ASM_END(clunet_tx_set_payload)
 
 #include "timer_handler.inc"
 #include "exti_handler.inc"
-
