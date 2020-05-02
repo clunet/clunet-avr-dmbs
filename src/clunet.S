@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019 Sergey V. DUDANOV
+/* Copyright (c) 2018-2020 Sergey V. DUDANOV
    All rights reserved.
 
    This file is part of clunet-avr-dmbs project.

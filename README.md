@@ -1,4 +1,4 @@
-## avr-dmbs-lib
+## clunet-avr-dmbs
 
 This is CLUNET protocol implementation for [Microchip/Atmel AVR](https://www.microchip.com/design-centers/8-bit/avr-mcus/get-started-now) family microcontrollers as [DMBS](https://github.com/abcminiuser/dmbs) module.
 
