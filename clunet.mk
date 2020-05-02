@@ -38,7 +38,12 @@ $(foreach MANDATORY_VAR, $(DMBS_BUILD_MANDATORY_VARS), $(call ERROR_IF_UNSET, $(
 
 # CLUNET Library
 
+$(call ERROR_IF_EMPTY, CLUNET_DEVICE_ADDRESS)
+$(call ERROR_IF_EMPTY, CLUNET_BOOTLOADER_SUPPORT)
+$(call ERROR_IF_EMPTY, CLUNET_BOOTLOADER_ADDRESS)
+
 CC_FLAGS   += -DCLUNET_BOOTLOADER_SUPPORT=$(CLUNET_BOOTLOADER_SUPPORT) -DCLUNET_DEVICE_ADDRESS=$(CLUNET_DEVICE_ADDRESS)
+
 ifneq ($(CLUNET_BOOTLOADER_SUPPORT), 0)
  # bootloader support enabled
  CC_FLAGS  += -DCLUNET_BOOTLOADER_ADDRESS=$(CLUNET_BOOTLOADER_ADDRESS)
@@ -46,16 +51,15 @@ ifneq ($(CLUNET_BOOTLOADER_SUPPORT), 0)
  LD_FLAGS  += -Wl,--section-start=.clunetreset=$(shell printf "0x%X\n" $$(($(CLUNET_BOOTLOADER_ADDRESS) - 2)))
 endif
 
+CLUNET_SRC := $(CLUNET_MODULE_PATH)/src/clunet.S
+
 ifeq ($(CLUNET_BOOTLOADER_SUPPORT), 3)
- SRC           := 
- TARGET        := bootloader
- CLUNET_SRC    := $(CLUNET_MODULE_PATH)/src/boot.S
- LD_FLAGS      += -nostartfiles
-else
- CLUNET_SRC    := $(CLUNET_MODULE_PATH)/src/clunet.S
- ifeq ($(CLUNET_BOOTLOADER_SUPPORT), 2)
-  CLUNET_SRC   += $(CLUNET_MODULE_PATH)/src/boot.S
- endif
+ SRC        := 
+ TARGET     := bootloader
+ CLUNET_SRC := $(CLUNET_MODULE_PATH)/src/boot.S
+ LD_FLAGS   += -nostartfiles
+else ifeq ($(CLUNET_BOOTLOADER_SUPPORT), 2)
+ CLUNET_SRC += $(CLUNET_MODULE_PATH)/src/boot.S
 endif
 
 # Compiler flags and sources
