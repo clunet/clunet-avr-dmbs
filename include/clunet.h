@@ -178,14 +178,8 @@ typedef struct {
     clunet_address_t  src_address;  /* source address */
     clunet_command_t  command;      /* command */
     uint8_t           size;         /* size of payload data */
-    /* payload data */
+    uint8_t           payload[];    /* payload data */
 } clunet_message_t;
-
-typedef struct {
-    uint8_t           size;         /* whole message size */
-    clunet_message_t  message;      /* message */
-    /* payload data */
-} clunet_template_t;
 
 #define CLUNET_HEADER_SIZE  sizeof(clunet_message_t)
 
@@ -219,6 +213,10 @@ void clunet_tx_prepare_simple_response(void);
 // RU: Копирует сообщение в буфер отправки.
 void clunet_tx_set_message(clunet_message_t *message);
 
+// EN: Copy message to TX buffer from PROGMEM.
+// RU: Копирует сообщение в буфер отправки из PROGMEM области.
+void clunet_tx_set_message_P(const clunet_message_t *message);
+
 // EN: Copy payload to TX buffer.
 // RU: Копирует данные в буфер отправки.
 void clunet_tx_set_payload(void *payload, uint8_t payload_size);
@@ -230,10 +228,6 @@ void clunet_tx_set_payload_P(const void *payload, uint8_t payload_size);
 // EN: Copy payload data to TX buffer from PROGMEM. First byte must contain size.
 // RU: Копирует данные в буфер отправки из шаблона в PROGMEM области. Первый байт должен содержать размер.
 void clunet_tx_set_payload_template_P(const void *payload);
-
-// EN: Copy message to TX buffer from PROGMEM template. First byte must contain size of whole message.
-// RU: Копирует сообщение в буфер отправки из шаблона в PROGMEM области. Первый байт должен содержать размер всего сообщения.
-void clunet_tx_set_message_template_P(const clunet_template_t *message);
 
 // EN: Start transmit operation. Add checksum and source device address, so don't care about it.
 // RU: Запускает передачу. Добавляет контрольную сумму и адрес устройства, не переживайте об этом.

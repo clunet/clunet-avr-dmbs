@@ -414,11 +414,14 @@ CLUNET_ASM_START(clunet_tx_prepare_simple_response)
 
 CLUNET_ASM_END(clunet_tx_prepare_simple_response)
 
-CLUNET_ASM_EXPORT(clunet_tx_set_message_template_P)
-CLUNET_ASM_START(clunet_tx_set_message_template_P)
+CLUNET_ASM_EXPORT(clunet_tx_set_message_P)
+CLUNET_ASM_START(clunet_tx_set_message_P)
 
     movw    ZL, arg0lo                  ; [2]
-    lpm     arg1lo, Z+                  ; [3]
+    adiw    ZL, 4                       ; [2]
+    lpm     arg1lo, Z                   ; [3]
+    subi    arg1lo, -5                  ; [1]
+    movw    ZL, arg0lo                  ; [2]
     xldi    CLUNET_VAR(var_tx_priority) ; [2]
     rjmp    2f                          ; [2] ->
 
@@ -447,7 +450,7 @@ CLUNET_ASM_START(clunet_tx_set_payload_template_P)
 
 CLUNET_ASM_END(clunet_tx_set_payload_template_P)
 CLUNET_ASM_END(clunet_tx_set_payload_P)
-CLUNET_ASM_END(clunet_tx_set_message_template_P)
+CLUNET_ASM_END(clunet_tx_set_message_P)
 
 ; Copy payload data to TX message buffer
 ; void clunet_tx_set_payload(uint8_t *payload, uint8_t size);
