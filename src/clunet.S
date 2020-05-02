@@ -458,7 +458,7 @@ CLUNET_ASM_START(clunet_tx_set_payload_template_P)
 CLUNET_ASM_END(clunet_tx_set_payload_template_P)
 CLUNET_ASM_END(clunet_tx_set_payload_P)
 CLUNET_ASM_END(clunet_tx_set_message_P)
-CLUNET_ASM_START(clunet_tx_set_message_template_P)
+CLUNET_ASM_END(clunet_tx_set_message_template_P)
 
 ; Copy payload data to TX message buffer
 ; void clunet_tx_set_payload(uint8_t *payload, uint8_t size);
