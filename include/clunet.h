@@ -217,6 +217,10 @@ void clunet_tx_set_message(clunet_message_t *message);
 // RU: Копирует сообщение в буфер отправки из PROGMEM области.
 void clunet_tx_set_message_P(const clunet_message_t *message);
 
+// EN: Copy message to TX buffer from PROGMEM. First byte must contain size.
+// RU: Копирует сообщение в буфер отправки из шаблона в PROGMEM области. Первый байт должен содержать размер.
+void clunet_tx_set_message_template_P(const void *message);
+
 // EN: Copy payload to TX buffer.
 // RU: Копирует данные в буфер отправки.
 void clunet_tx_set_payload(void *payload, uint8_t payload_size);
