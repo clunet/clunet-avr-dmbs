@@ -414,6 +414,10 @@ CLUNET_ASM_START(clunet_tx_prepare_simple_response)
 
 CLUNET_ASM_END(clunet_tx_prepare_simple_response)
 
+; Copy message to TX buffer from PROGMEM template.
+; void clunet_tx_set_message_template_P(const void *message);
+; First byte in PROGMEM must be size of whole message.
+; WARNING: payload size must not exceed the size of the TX buffer!
 CLUNET_ASM_EXPORT(clunet_tx_set_message_template_P)
 CLUNET_ASM_START(clunet_tx_set_message_template_P)
 
@@ -421,6 +425,9 @@ CLUNET_ASM_START(clunet_tx_set_message_template_P)
     lpm     arg1lo, Z+                  ; [3]
     rjmp    1f                          ; [2] ->
 
+; Copy message to TX buffer from PROGMEM.
+; void clunet_tx_set_message_P(const clunet_message_t *message);
+; WARNING: payload size must not exceed the size of the TX buffer!
 CLUNET_ASM_EXPORT(clunet_tx_set_message_P)
 CLUNET_ASM_START(clunet_tx_set_message_P)
 
@@ -433,7 +440,8 @@ CLUNET_ASM_START(clunet_tx_set_message_P)
     rjmp    2f                          ; [2] ->
 
 ; Copy payload data from PROGMEM to TX buffer.
-; First byte in PROGMEM must be size of payload.
+; void clunet_tx_set_payload_P(const void *payload, uint8_t payload_size);
+; WARNING: payload size must not exceed the size of the TX buffer!
 CLUNET_ASM_EXPORT(clunet_tx_set_payload_P)
 CLUNET_ASM_START(clunet_tx_set_payload_P)
 
@@ -441,7 +449,9 @@ CLUNET_ASM_START(clunet_tx_set_payload_P)
     rjmp    1f                          ; [2] ->
 
 ; Copy payload data from PROGMEM to TX buffer.
+; void clunet_tx_set_payload_template_P(const void *payload);
 ; First byte in PROGMEM must be size of payload.
+; WARNING: payload size must not exceed the size of the TX buffer!
 CLUNET_ASM_EXPORT(clunet_tx_set_payload_template_P)
 CLUNET_ASM_START(clunet_tx_set_payload_template_P)
 
@@ -449,30 +459,35 @@ CLUNET_ASM_START(clunet_tx_set_payload_template_P)
     lpm     arg1lo, Z+                  ; [3]
 1:  xldi    CLUNET_VAR(var_tx_size)     ; [2]
     st      X+, arg1lo                  ; [2] size
-2:  lpm     tmp, Z+                     ; [3] <-
+2:  tst     arg1lo                      ; [1]
+    breq    3f                          ; [1][2] -> return: payload size is 0
+    lpm     tmp, Z+                     ; [3] <-
     st      X+, tmp                     ; [2]
     dec     arg1lo                      ; [1]
     brne    2b                          ; [1][2] ->
-    ret                                 ; [4]
+3:  ret                                 ; [4] <-
 
 CLUNET_ASM_END(clunet_tx_set_payload_template_P)
 CLUNET_ASM_END(clunet_tx_set_payload_P)
 CLUNET_ASM_END(clunet_tx_set_message_P)
 CLUNET_ASM_END(clunet_tx_set_message_template_P)
 
-; Copy payload data to TX message buffer
-; void clunet_tx_set_payload(uint8_t *payload, uint8_t size);
+; Copy payload data to TX buffer
+; void clunet_tx_set_payload(void *payload, uint8_t size);
 ; WARNING: payload size must not exceed the size of the TX buffer!
 CLUNET_ASM_EXPORT(clunet_tx_set_payload)
 CLUNET_ASM_START(clunet_tx_set_payload)
 
-    movw    ZL, arg0lo                  ; [2]
     xldi    CLUNET_VAR(var_tx_size)     ; [2]
-    st      X+, arg1lo                  ; [2] size
+    st      X+, arg1lo                  ; [2] store size
     tst     arg1lo                      ; [1]
-    breq    1f                          ; [1][2] ->
+    breq    1f                          ; [1][2] -> return: payload size is 0
+    movw    ZL, arg0lo                  ; [2]
     rjmp    0f                          ; [2] ->
 
+; Copy message to TX buffer
+; void clunet_tx_set_message(clunet_message_t *message);
+; WARNING: payload size must not exceed the size of the TX buffer!
 CLUNET_ASM_EXPORT(clunet_tx_set_message)
 CLUNET_ASM_START(clunet_tx_set_message)
 
