@@ -460,12 +460,12 @@ CLUNET_ASM_START(clunet_tx_set_payload_template_P)
 1:  xldi    CLUNET_VAR(var_tx_size)     ; [2]
     st      X+, arg1lo                  ; [2] size
 2:  tst     arg1lo                      ; [1]
-    breq    3f                          ; [1][2] -> return: payload size is 0
-    lpm     tmp, Z+                     ; [3] <-
+    breq    4f                          ; [1][2] -> return: payload size is 0
+3:  lpm     tmp, Z+                     ; [3] <-
     st      X+, tmp                     ; [2]
     dec     arg1lo                      ; [1]
-    brne    2b                          ; [1][2] ->
-3:  ret                                 ; [4] <-
+    brne    3b                          ; [1][2] ->
+4:  ret                                 ; [4] <-
 
 CLUNET_ASM_END(clunet_tx_set_payload_template_P)
 CLUNET_ASM_END(clunet_tx_set_payload_P)
