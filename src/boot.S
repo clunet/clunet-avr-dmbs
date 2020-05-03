@@ -702,14 +702,21 @@ CLUNET_ASM_START(btldr_recv)
     brts    btldr_recv                                          ; [0][2] -> ERROR: message not from client. try again.
     
     ; check for system request message
-1:  ldd     ret0lo, Y+3                                         ; [2]
+    ldd     ret0lo, Y+3                                         ; [2]
     sbrc    ret0lo, CLUNET_MESSAGE_SYSTEM_BIT                   ; [1][1][2]
     sbrc    ret0lo, CLUNET_MESSAGE_RESPONSE_BIT                 ; [2][1][0]
     rjmp    5f                                                  ; [0][4][4] -> ERROR: non-system or response (event) message.
     
     ; checking for end of data message
 2:  ldd     tmphi, Y+4                                          ; [2] size
-    subi    tmphi, -5                                           ; [1]
+.if _buffer_size < 256
+    cpi     tmphi, _buffer_size - 5                             ; [1]
+    brsh    5f                                                  ; [1][2] -> ERROR: payload size too high
+.endif
+    subi    tmphi, -5                                           ; [1] equals [subi tmphi, 251]
+.if _buffer_size == 256
+    brsh    5f                                                  ; [1][2] -> ERROR: payload size too high
+.endif
     cp      byte_index, tmphi                                   ; [1]
     breq    7f                                                  ; [1][2] -> OK: data message received
     
