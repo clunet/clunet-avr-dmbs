@@ -52,6 +52,12 @@
 #define _WD_CHANGE_BIT  WDCE
 #endif
 
+#if defined(MCUSR)
+#define _STATUS_REG MCUSR
+#else
+#define _STATUS_REG MCUCSR
+#endif
+
 .macro reboot_by_wdt tmp=DEFAULT_TMP_REGISTER
     cli                                                           ; [1]
     sfr_ldi _WD_CONTROL_REG, _BV(WDE) | _BV(_WD_CHANGE_BIT), \tmp ; [2]
@@ -60,7 +66,7 @@
 .endm
 
 .macro wdt_disable tmp=DEFAULT_TMP_REGISTER
-    sfr_st  MCUSR, __zero_reg__                                   ; [1]
+    sfr_st  _STATUS_REG, __zero_reg__                             ; [1]
     sfr_ldi _WD_CONTROL_REG, _BV(WDE) | _BV(_WD_CHANGE_BIT), \tmp ; [2|3]
     sfr_st  _WD_CONTROL_REG, __zero_reg__                         ; [1|2]
 .endm
